@@ -14,40 +14,67 @@ def clear():
     os.system('cls')
 
 
+def get_would_be_config_location():
+    would_be_save_location = os.path.abspath(__file__)
+    would_be_save_location = would_be_save_location.split("\\")[:-1]
+    would_be_save_location = "\\".join(would_be_save_location) + "\\Config.json"
+
+    return would_be_save_location
+
+
 def create_defaults_settings():
     settings = {}
-    settings.setdefault(1, True)
-    # Organise folders in path
-    settings.setdefault(2, get_dt_file_path())
-    # Organise path
+    would_be_save_location = get_would_be_config_location()
+
+    if os.path.isfile(would_be_save_location):
+
+        with open("Config.json", "r") as fbs:
+
+            settings = json.load(fbs)
+
+    else:
+        settings.setdefault('folder_sort', True)
+        # Organise folders in path
+        settings.setdefault('path', get_dt_file_path())
+        # Organise path
 
     return settings
+
+
+def save_config(settings):
+
+    with open("Config.json", "w") as fbs:
+
+        json.dump(settings, fbs)
+
+    pass
 
 
 def change_setting2(settings):
     while True:
         setting = "File path organised"
         print_header(f"Settings - {setting}")
-        print(f"Current value = {settings[2]}")
+        print(f"Current value = {settings['path']}")
         prev_answer = input("Enter new value or type 'Cancel' to cancel :: ")
 
         if prev_answer.lower() == "cancel":
             return settings
 
         elif os.path.isdir(prev_answer):
-            settings[2] = prev_answer
+            settings['path'] = prev_answer
             return settings
 
         else:
             print("Invalid Response")
 
 
-
 def change_setting1(settings):
     while True:
         setting = "Organise existing folders"
+
         print_header(f"Settings - {setting}")
-        print(f"Current value = {settings[1]}")
+        print(f"Current value = {settings['folder_sort']}")
+
         prev_answer = input("Enter new value or type 'Cancel' to cancel :: ")
 
         if prev_answer.lower() == "cancel":
@@ -56,10 +83,10 @@ def change_setting1(settings):
         elif prev_answer.lower() in ["true", "false"]:
 
             if prev_answer.lower() == "false":
-                settings[1] = False
+                settings['folder_sort'] = False
 
             elif prev_answer.lower() == "true":
-                settings[1] = True
+                settings['folder_sort'] = True
 
             return settings
 
@@ -69,13 +96,15 @@ def change_setting1(settings):
 
 def open_settings(settings):
     while True:
-        setting2 = "Organise existing folders"
-        setting3 = "Organise path"
+        option1 = "Organise existing folders"
+        option2 = "Organise path"
+        option3 = "Save Settings"
 
         print_header("Settings")
-        print(f"1 - Exit\n"
-              f"2 - {setting2} - {settings[1]}\n"
-              f"3 - {setting3} - {settings[2]}")
+        print(f"1 - {option1} - {settings['folder_sort']}\n"
+              f"2 - {option2} - {settings['path']}\n"
+              f"3 - {option3}\n"
+              f"4 - Exit")
 
         try:
             prev_answer = int(input("Please select option :: "))
@@ -83,14 +112,18 @@ def open_settings(settings):
         except:
             continue
 
-        if prev_answer == 1:
+        if prev_answer == 4:
             break
 
-        elif prev_answer == 2:
+        elif prev_answer == 1:
             settings = change_setting1(settings)
 
-        elif prev_answer == 3:
+        elif prev_answer == 2:
             settings = change_setting2(settings)
+
+        elif prev_answer == 3:
+            save_config(settings)
+
 
     return settings
 
@@ -130,7 +163,7 @@ def input_user_options():
 
 
 def get_dt_file_list(settings):
-    dt_list = os.listdir(settings[2])
+    dt_list = os.listdir(settings['path'])
     result_list = []
 
     for item in dt_list:
@@ -148,7 +181,7 @@ def get_file_extension(file_name=None):
 def get_dict_of_dt_files_and_paths(dt_files, settings):
     dt_simple_dict = {}
     for file in dt_files:
-        dt_simple_dict[file] = settings[2] + "/" + file
+        dt_simple_dict[file] = settings['path'] + "/" + file
 
     return dt_simple_dict
 
@@ -160,7 +193,7 @@ def get_data_structure(dt_simple_dict, settings):
 
         if os.path.isdir(value):
 
-            if not settings[1]:
+            if not settings['folder_sort']:
                 continue
 
             else:
@@ -185,7 +218,7 @@ def create_dt_folders_and_update_data_structure(dt_items_dict, settings):
     for types, items in dt_items_dict.items():
 
         folder_name = f"{types} - Sorted_Folder"
-        folder_path = "\\".join([settings[2], folder_name])
+        folder_path = "\\".join([settings['path'], folder_name])
 
         try:
             os.mkdir(folder_path)
@@ -211,7 +244,7 @@ def move_files_and_directories(dt_items_dict, settings):
 
         for file in dt_items_dict[extension_key]:
             current_file_location = list(dt_items_dict_temp[extension_key][-1].values())[-1]
-            shutil.move(current_file_location, f"{settings[2]}\\{extension_key} - Sorted_Folder")
+            shutil.move(current_file_location, f"{settings['path']}\\{extension_key} - Sorted_Folder")
 
             single_item = dt_items_dict_temp[extension_key].pop()
 
